@@ -181,7 +181,7 @@ begin
 end;
 
 { function ReadMiniStream: reads a chained block of mini sectors }
-function ReadMiniStream(Stream: TStream; StartingSectorLocation: UInt32; StreamSize: UInt64): TArray<Byte>;
+function ReadMiniStream(Stream: TStream; StartingSectorLocation: UInt32; StreamSize: UInt32): TArray<Byte>;
 var
   DataBuffer    : TArray<Byte>; // Result
   DataSize      : UInt32; // Calculated data size from FAT chain
@@ -224,14 +224,14 @@ begin
 end;
 
 { function ReadStream: reads a chained block of sectors }
-function ReadStream(Stream: TStream; StartingSectorLocation: UInt32; StreamSize: UInt64): TArray<Byte>;
+function ReadStream(Stream: TStream; StartingSectorLocation: UInt32; StreamSize: UInt32): TArray<Byte>;
 var
   DataBuffer    : TArray<Byte>; // Result
   DataSize      : UInt32; // Calculated data size from FAT chain
   DataRemaining : UInt32; // Remaining bytes to read
   DataChunkSize : UInt32; // Bytes to read during the step
   DataOffset    : UInt32; // Pointer to the current reading location
-  NextFATSector : UInt32; // Next chain mini sector
+  NextFATSector : UInt32; // Next chain sector
   SectorCount   : UInt32; // Calculated sector count from FAT chain
   SectorSize    : UInt32; // Calculated sector size in Byte
   SectorBuffer  : TArray<Byte>; // Reading buffer for last partial sector
@@ -346,7 +346,7 @@ begin
     SetLength(CFBDirArray, CFBDirLength);
     { Step 5: read the mini FAT }
     N := 0;
-    DataSize := CFBHeader.NumberOfMiniFATSectors shl CFBHeader.SectorShift; // NumberOfMiniFATSectors * SectorShift;
+    DataSize := CFBHeader.NumberOfMiniFATSectors shl CFBHeader.SectorShift; // NumberOfMiniFATSectors * SectorSize;
     CFBMiniFATLength := DataSize shr 2;
     SetLength(CFBMiniFATArray, CFBMiniFATLength);
     NextFATSector := CFBHeader.FirstMiniFATSectorLocation;

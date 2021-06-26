@@ -391,7 +391,7 @@ begin
               $0009: { VersionRecord }
               begin
                 DirStream.VersionMajor := ReadDWORD();
-                DirStream.VersionMinor := ReadWOrD();
+                DirStream.VersionMinor := ReadWORD();
               end;
               $000C: { ConstantsRecord }
               begin
