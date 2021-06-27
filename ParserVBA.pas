@@ -624,6 +624,8 @@ begin
       { Step 2: parse the '_VBA_PROJECT' stream }
       Result := ParseProjectStream(VBAProgram);
       if Result = TProcessFileResult.pfOk then
+      begin
+        ReadIdentifiers(VBAProgram.VbaProjectData, VBAProgram.CodePage);
         for I := 0 to VBAProgram.ModulesCount - 1 do
         begin
           { Step 3: read the modules streams }
@@ -631,6 +633,7 @@ begin
           { Step 4: parse the p-code }
           ParsePCode(VBAProgram, VBAProgram.Module[I]);
         end;
+      end;
     end;
   end;
 end;

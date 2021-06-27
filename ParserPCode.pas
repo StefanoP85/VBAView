@@ -6,6 +6,7 @@ interface
 uses Common;
 
 procedure ParsePCode(const VBAProgram: TVBAProgram; var Module: TModule);
+procedure ReadIdentifiers(const VbaProjectData: TArray<Byte>; CodePage: UInt32);
 
 implementation
 
@@ -398,7 +399,7 @@ type
   TIdentifiers = TDictionary<UInt16, string>;
 
 var
-  Identifiers  : TIdentifiers;
+  Identifiers : TIdentifiers;
 
 procedure Reset();
 begin
@@ -1431,7 +1432,7 @@ begin
   end;
 end;
 
-function ReadIdentifiers(const VbaProjectData: TArray<Byte>; CodePage: UInt32): Boolean;
+procedure ReadIdentifiers(const VbaProjectData: TArray<Byte>; CodePage: UInt32);
 var
   ByteChunk           : byte;
   Endian              : TEndian;
@@ -1456,7 +1457,6 @@ var
   WordChunk           : UInt16;
 begin
   Reset();
-  Result := False;
   MagicSignature := GetWord(VbaProjectData, 0, TEndian.LittleEndian);
   if MagicSignature <> $61CC then
     Exit;
@@ -1548,7 +1548,6 @@ begin
   W1 := ReadWORD(VbaProjectData, Offset, Endian);
   Offset := Offset + 4;
   IdentifierNumber := W0 - NumberOfIdentifiers;
-  Result := True;
   Identifiers := TDictionary<UInt16, string>.Create(NumberOfIdentifiers);
   for I := 1 to NumberOfIdentifiers do
   begin
@@ -1623,13 +1622,18 @@ begin
 end;
 
 procedure ParsePCode(const VBAProgram: TVBAProgram; var Module: TModule);
+var
+  ParseResult: string;
 begin
   try
-    if ReadIdentifiers(VBAProgram.VbaProjectData, VBAProgram.CodePage) then
-      Module.ParsedPCode := ParseModule(Module.PerformanceCache, VBAProgram);
+    if Identifiers <> nil then
+      ParseResult := ParseModule(Module.PerformanceCache, VBAProgram)
+    else
+      ParseResult := ParseSimple(Module.PerformanceCache);
   except
-    Module.ParsedPCode := ParseSimple(Module.PerformanceCache);
+    ParseResult := ParseSimple(Module.PerformanceCache);
   end;
+  Module.ParsedPCode := ParseResult;
 end;
 
 initialization
