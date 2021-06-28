@@ -344,7 +344,7 @@ Private Sub ReadSectorAsDirectory(ByVal FileChannel As Integer, ByVal SectorNumb
         Get FileChannel, , DirectoryEntry.StreamSize
         Get FileChannel, , DirectoryEntry.StreamSizeHigh
         DirectoryEntry.DirectoryEntryName = DirectoryEntryName
-        DirectoryEntry.DirectoryEntryName = Left(DirectoryEntry.DirectoryEntryName, RightShift(DirectoryEntry.DirectoryEntryNameLength, 1) - 1)
+        DirectoryEntry.DirectoryEntryName = Left$(DirectoryEntry.DirectoryEntryName, RightShift(DirectoryEntry.DirectoryEntryNameLength, 1) - 1)
         SectorData(I) = DirectoryEntry
     Next
 End Sub
@@ -819,7 +819,7 @@ Private Sub ParseModuleStream()
         SourceCode = ""
         For J = LBound(SourceLines) To UBound(SourceLines)
             SourceLine = SourceLines(J)
-            If Left(SourceLine, 9) <> "Attribute" Then
+            If Left$(SourceLine, 9) <> "Attribute" Then
                 SourceCode = SourceCode & SourceLine & vbNewLine
             End If
         Next
