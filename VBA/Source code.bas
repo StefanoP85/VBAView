@@ -599,7 +599,7 @@ Private Sub DecompressContainer(ByRef CompressedContainer() As Byte, ByRef Compr
         If Not (Not DecompressedData) Then
             ReDim Preserve DecompressedData(UBound(DecompressedData) + 4096)
         Else
-            ReDim DecompressedData(0 To 4095)
+            ReDim DecompressedData(4095)
             DecompressedIndex = 0
         End If
         ChunkHeader = CompressedContainer(CompressedStart) + 256& * CompressedContainer(CompressedStart + 1)
@@ -611,7 +611,7 @@ Private Sub DecompressContainer(ByRef CompressedContainer() As Byte, ByRef Compr
         If ChunkFlag = 0 Then
             For J = 0 To 4095
                 DecompressedData(DecompressedIndex + J) = CompressedContainer(CompressedStart + J)
-            Next J
+            Next
             CompressedStart = CompressedStart + 4096
             DecompressedIndex = DecompressedIndex + 4096
         Else
@@ -630,14 +630,14 @@ Private Sub DecompressContainer(ByRef CompressedContainer() As Byte, ByRef Compr
                         DecompressedLength = DecompressedIndex Mod 4096
                         For BitCount = 4 To 11
                             If DecompressedLength <= PowerOf2(BitCount) Then Exit For
-                        Next BitCount
+                        Next
                         BitMask = PowerOf2(16) - PowerOf2(16 - BitCount)
                         CopyOffset = (Token And BitMask) \ PowerOf2(16 - BitCount) + 1
                         BitMask = PowerOf2(16 - BitCount) - 1
                         CopyLength = (Token And BitMask) + 3
                         For J = 0 To CopyLength - 1
                             DecompressedData(DecompressedIndex + J) = DecompressedData(DecompressedIndex - CopyOffset + J)
-                        Next J
+                        Next
                         DecompressedIndex = DecompressedIndex + CopyLength
                     End If
                 Next
@@ -645,7 +645,7 @@ Private Sub DecompressContainer(ByRef CompressedContainer() As Byte, ByRef Compr
         End If
         If CompressedStart > UBound(CompressedContainer) Then Exit Do
     Loop
-    ReDim Preserve DecompressedData(0 To DecompressedIndex - 1)
+    ReDim Preserve DecompressedData(DecompressedIndex - 1)
 End Sub
 
 Private Function ReadBYTE(ByRef DecompressedStream() As Byte, ByRef Offset As Long) As Byte
