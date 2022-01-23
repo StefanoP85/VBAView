@@ -6,36 +6,67 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons,
   Vcl.ActnList, System.Actions, Vcl.StdActns, System.ImageList, Vcl.ImgList,
-  Vcl.Grids, System.Classes, SynEdit, SynEditHighlighter,
-  SynHighlighterVB, SynHighlighterST,
-  UnitFormVBAProperties, ParserVBA, Common;
+  Vcl.Grids, System.Classes, Vcl.Menus, SynEdit, SynEditHighlighter,
+  SynHighlighterVB, SynHighlighterST, SynEditSearch, SynEditMiscClasses,
+  UnitFormVBAProperties, ParserVBA, Common, Clipbrd;
 
 type
   TFormVBAView = class(TForm)
+    ActionExportAll: TAction;
+    ActionExportThis: TAction;
     ActionList: TActionList;
     ActionProjectProperties: TAction;
+    EditFileSpec: TEdit;
+    Exportthismodule1: TMenuItem;
+    FileExit: TFileExit;
     FileOpen: TFileOpen;
+    FileSaveAll: TFileSaveAs;
+    FileSaveThis: TFileSaveAs;
+    GridPanelMainLayout: TGridPanel;
+    GridPanelModule: TGridPanel;
     ImageList: TImageList;
-    LabeledEditFileSpec: TLabeledEdit;
     LabelModules: TLabel;
     LabelPCode: TLabel;
     LabelVB: TLabel;
-    SpeedButtonFileOpen: TSpeedButton;
-    SpeedButtonInformation: TSpeedButton;
+    MainMenu: TMainMenu;
+    MenuItemExit: TMenuItem;
+    MenuItemFile: TMenuItem;
+    MenuItemFileExportAll: TMenuItem;
+    MenuItemFileExportThis: TMenuItem;
+    MenuItemFileOpen: TMenuItem;
+    MenuItemSearch: TMenuItem;
+    MenuItemSearchFind: TMenuItem;
+    MenuItemSearchFindFirst: TMenuItem;
+    MenuItemSearchFindNext: TMenuItem;
+    MenuItemView: TMenuItem;
+    MenuItemViewInformation: TMenuItem;
+    PanelModulePCode: TPanel;
+    PanelModules: TPanel;
+    PanelModuleVB: TPanel;
+    SaveAll1: TMenuItem;
+    SearchFind: TSearchFind;
+    SearchFindFirst: TSearchFindFirst;
+    SearchFindNext: TSearchFindNext;
     StringGridModules: TStringGrid;
     SynEditPCode: TSynEdit;
+    SynEditSearch: TSynEditSearch;
     SynEditVB: TSynEdit;
-    SynSTSyn: TSynSTSyn;
     SynVBSyn: TSynVBSyn;
+    procedure ActionExportAllExecute(Sender: TObject);
+    procedure ActionExportThisExecute(Sender: TObject);
     procedure ActionProjectPropertiesExecute(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure FileOpenAccept(Sender: TObject);
+    procedure FileSaveAllAccept(Sender: TObject);
+    procedure FileSaveThisAccept(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure GridPanelMainLayoutResize(Sender: TObject);
+    procedure SearchFindFindDialogFind(Sender: TObject);
+    procedure SearchFindFirstFindDialogFind(Sender: TObject);
     procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
   private
     { Private declarations }
-    VBAProgram : TVBAProgram;
+    var VBAProgram : TVBAProgram;
     procedure ResetGrid();
     procedure ShowErrorMessage(const E: Exception);
     procedure ShowHintMessage(const ProcessFileResult: TProcessFileResult);
@@ -72,13 +103,37 @@ const
   MessageDirectorySectorNumberError = 'The file has an internal problema: maybe the ' +
     'file is damaged or it has been modified in a wrong way.';
   MessageParseError = 'An unexpected error has occured during parsing the file.'#13#10 +
-    'Please note that this application is an ALPHA version, and some information ' +
+    'Please note that this application is an BETA version, and some information ' +
     'are not well documented by Microsoft. If you want report the error to the author, ' +
     'please include the following information:'#13#10;
   MessageError = 'An enexpected error has occured, causing the failure of the '#13#10 +
     'parsing and probably this application needs to be restarted. Please note that ' +
-    'this application is an ALPHA version. If you want report the error to the author, ' +
+    'this application is an BETA version. If you want report the error to the author, ' +
     'please include the following information:'#13#10;
+
+procedure TFormVBAView.ActionExportAllExecute(Sender: TObject);
+var
+  I             : Int32;
+  StringBuilder : TStringBuilder;
+begin
+  StringBuilder := TStringBuilder.Create();
+  try
+    for I := 0 to VBAProgram.ModulesCount - 1 do
+    begin
+      StringBuilder.AppendFormat(''' Module ', []).AppendFormat(VBAProgram.Module[I].ModuleName, []).AppendLine();
+      StringBuilder.AppendFormat(VBAProgram.Module[I].SourceCode, []);
+      StringBuilder.AppendLine();
+    end;
+    Clipboard().AsText := StringBuilder.ToString();
+  finally
+    FreeAndNil(StringBuilder);
+  end;
+end;
+
+procedure TFormVBAView.ActionExportThisExecute(Sender: TObject);
+begin
+  Clipboard().AsText := SynEditVB.Text;
+end;
 
 procedure TFormVBAView.ActionProjectPropertiesExecute(Sender: TObject);
 begin
@@ -90,15 +145,29 @@ var
   FileName    : string;
   ParseResult : TProcessFileResult;
 begin
+  ActionExportAll.Enabled := False;
+  ActionExportThis.Enabled := False;
   ActionProjectProperties.Enabled := False;
+  FileSaveAll.Enabled := False;
+  FileSaveThis.Enabled := False;
+  SearchFind.Enabled := False;
+  SearchFindFirst.Enabled := False;
+  SearchFindNext.Enabled := False;
   FileName := FileOpen.Dialog.FileName;
   ResetGrid();
   try
     ParseResult := ParserVBA.ParseFile(FileName, VBAProgram);
     if ParseResult = TProcessFileResult.pfOk then
     begin
+      ActionExportAll.Enabled := True;
+      ActionExportThis.Enabled := True;
       ActionProjectProperties.Enabled := True;
-      LabeledEditFileSpec.Text := FileName;
+      FileSaveAll.Enabled := True;
+      FileSaveThis.Enabled := True;
+      SearchFind.Enabled := True;
+      SearchFindFirst.Enabled := True;
+      SearchFindNext.Enabled := True;
+      EditFileSpec.Text := FileName;
       UpdateGrid();
     end
     else
@@ -108,6 +177,85 @@ begin
         ShowWarningMessage(E);
       on E: Exception do
         ShowErrorMessage(E);
+  end;
+end;
+
+procedure TFormVBAView.FileSaveAllAccept(Sender: TObject);
+var
+  Encoding   : TEncoding;
+  FileData   : TBytes;
+  FileExt    : string;
+  FileName   : string;
+  FilePath   : string;
+  FileStream : TFileStream;
+  I: Integer;
+begin
+  FilePath := ExtractFilePath(FileSaveAll.Dialog.FileName);
+  if FileSaveAll.Dialog.FilterIndex = 1 then
+    FileExt := '.bas'
+  else
+    FileExt := '.txt';
+  Encoding := nil;
+  FileStream := nil;
+  try
+    case FileSaveThis.Dialog.FilterIndex of
+      1:
+        Encoding := TMBCSEncoding.Create();
+      2:
+        Encoding := TMBCSEncoding.Create();
+      3:
+        Encoding := TUTF8Encoding.Create();
+      4:
+        Encoding := TUnicodeEncoding.Create();
+    end;
+    for I := 0 to VBAProgram.ModulesCount - 1 do
+    begin
+      FileName := FilePath + VBAProgram.Module[I].ModuleName + FileExt;
+      FileData := Encoding.GetBytes(VBAProgram.Module[I].SourceCode);
+      FileStream := TFileStream.Create(FileName, fmCreate);
+      try
+        FileStream.WriteBuffer(FileData, Length(FileData));
+      finally
+        FreeAndNil(FileStream);
+      end;
+    end;
+  finally
+    FreeAndNil(Encoding);
+  end;
+end;
+
+procedure TFormVBAView.FileSaveThisAccept(Sender: TObject);
+var
+  Encoding   : TEncoding;
+  FileData   : TBytes;
+  FileName   : string;
+  FileStream : TFileStream;
+begin
+  FileName := FileSaveThis.Dialog.FileName;
+  if ExtractFileExt(FileName) = '' then
+    if FileSaveThis.Dialog.FilterIndex = 1 then
+      FileName := FileName + '.bas'
+    else
+      FileName := FileName + '.txt';
+  Encoding := nil;
+  FileStream := nil;
+  try
+    case FileSaveThis.Dialog.FilterIndex of
+      1:
+        Encoding := TMBCSEncoding.Create();
+      2:
+        Encoding := TMBCSEncoding.Create();
+      3:
+        Encoding := TUTF8Encoding.Create();
+      4:
+        Encoding := TUnicodeEncoding.Create();
+    end;
+    FileData := Encoding.GetBytes(SynEditVB.Text);
+    FileStream := TFileStream.Create(FileName, fmCreate);
+    FileStream.WriteBuffer(FileData, Length(FileData));
+  finally
+    FreeAndNil(FileStream);
+    FreeAndNil(Encoding);
   end;
 end;
 
@@ -121,32 +269,45 @@ begin
   StringGridModules.ColWidths[2] := 60;
 end;
 
-procedure TFormVBAView.FormResize(Sender: TObject);
-var
-  ScreenHeight : Int32;
+procedure TFormVBAView.GridPanelMainLayoutResize(Sender: TObject);
 begin
-  ScreenHeight := Height - StringGridModules.Top - 64;
-  LabeledEditFileSpec.Width := Width - LabeledEditFileSpec.Left - 32;
-  StringGridModules.Height  := ScreenHeight;
-  SynEditVB.Top             := StringGridModules.Top;
-  SynEditVB.Height          := ScreenHeight div 2 - 16;
-  SynEditVB.Width           := Width - 508;
-  LabelPCode.Top            := SynEditVB.Top + ScreenHeight div 2 - 8;
-  SynEditPCode.Top          := SynEditVB.Top + ScreenHeight div 2 + 16;
-  SynEditPCode.Height       := ScreenHeight div 2 - 16;
-  SynEditPCode.Width        := Width - 508;
+  PanelModules.Height := GridPanelMainLayout.CellSize[0,1].Y - 8;
 end;
 
 procedure TFormVBAView.ResetGrid();
 var
   I: UInt32;
 begin
-  LabeledEditFileSpec.Text := '';
+  EditFileSpec.Text := '';
   StringGridModules.RowCount := 2;
   for I := 0 to StringGridModules.ColCount - 1 do
     StringGridModules.Cells[I, 1] := '';
   SynEditPCode.Text := '';
   SynEditVB.Text := '';
+end;
+
+procedure TFormVBAView.SearchFindFindDialogFind(Sender: TObject);
+var
+  SearchText : string;
+begin
+  SearchText := SearchFind.Dialog.FindText;
+  SynEditSearch.FindFirst(SearchText);
+end;
+
+procedure TFormVBAView.SearchFindFirstFindDialogFind(Sender: TObject);
+var
+  I          : Int32;
+  SearchText : string;
+begin
+  SearchText := SearchFindFirst.Dialog.FindText;
+  if VBAProgram.ModulesCount > 0 then
+    for I := 0 to VBAProgram.ModulesCount - 1 do
+      if VBAProgram.Module[I].SourceCode.ToUpper().Contains(SearchText.ToUpper()) then
+      begin
+        StringGridModules.Selection := TGridRect(Rect(0, I + 1, 2, I + 1));
+        SynEditVB.Text := VBAProgram.Module[I].SourceCode;
+        SynEditPCode.Text := VBAProgram.Module[I].ParsedPCode;
+      end;
 end;
 
 procedure TFormVBAView.ShowErrorMessage(const E: Exception);
@@ -201,7 +362,7 @@ end;
 
 procedure TFormVBAView.UpdateGrid();
 var
-  I : Integer;
+  I : Int32;
 begin
   if VBAProgram.ModulesCount > 0 then
   begin
