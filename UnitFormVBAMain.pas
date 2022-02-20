@@ -13,8 +13,10 @@ uses
 
 type
   TFormVBAView = class(TForm)
+    ActionCheck: TAction;
     ActionExportAll: TAction;
     ActionExportThis: TAction;
+    ActionGlobalSearch: TAction;
     ActionHelp1031: TAction;
     ActionHelp1033: TAction;
     ActionHelp1040: TAction;
@@ -33,6 +35,7 @@ type
     LabelPCode: TLabel;
     LabelVB: TLabel;
     MainMenu: TMainMenu;
+    MenuItemCheckAutoruns: TMenuItem;
     MenuItemExit: TMenuItem;
     MenuItemFile: TMenuItem;
     MenuItemFileExportAll: TMenuItem;
@@ -44,6 +47,7 @@ type
     MenuItemSearch: TMenuItem;
     MenuItemSearchFind: TMenuItem;
     MenuItemSearchFindNext: TMenuItem;
+    MenuItemSearchGlobalSearch: TMenuItem;
     MenuItemView: TMenuItem;
     MenuItemViewInformation: TMenuItem;
     PanelModulePCode: TPanel;
@@ -57,26 +61,21 @@ type
     SynEditSearch: TSynEditSearch;
     SynEditVB: TSynEdit;
     SynVBSyn: TSynVBSyn;
-    ActionGlobalSearch: TAction;
-    MenuItemSearchGlobalSearch: TMenuItem;
-    ActionCheck: TAction;
-    MenuItemCheckAutoruns: TMenuItem;
+    procedure ActionCheckExecute(Sender: TObject);
     procedure ActionExportAllExecute(Sender: TObject);
     procedure ActionExportThisExecute(Sender: TObject);
+    procedure ActionGlobalSearchExecute(Sender: TObject);
+    procedure ActionHelp1031Execute(Sender: TObject);
+    procedure ActionHelp1033Execute(Sender: TObject);
+    procedure ActionHelp1040Execute(Sender: TObject);
     procedure ActionProjectPropertiesExecute(Sender: TObject);
     procedure FileOpenAccept(Sender: TObject);
     procedure FileSaveAllAccept(Sender: TObject);
     procedure FileSaveThisAccept(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure ActionHelp1031Execute(Sender: TObject);
-    procedure ActionHelp1033Execute(Sender: TObject);
-    procedure ActionHelp1040Execute(Sender: TObject);
-    procedure ActionGlobalSearchExecute(Sender: TObject);
-    procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
     procedure GridPanelMainLayoutResize(Sender: TObject);
-    procedure ActionCheckExecute(Sender: TObject);
+    procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
   private
     { Private declarations }
     var VBAProgram : TVBAProgram;
