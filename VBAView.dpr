@@ -7,7 +7,9 @@ uses
   ParserVBA in 'ParserVBA.pas',
   FilesCFB in 'FilesCFB.pas',
   ParserPCode in 'ParserPCode.pas',
-  Common in 'Common.pas';
+  Common in 'Common.pas',
+  UnitFormModuleSearch in 'UnitFormModuleSearch.pas' {FormModuleSearch},
+  UnitFormVBACheck in 'UnitFormVBACheck.pas' {FormVBACheck};
 
 {$R *.res}
 
@@ -18,5 +20,7 @@ begin
   Application.Title := 'VBA Preview';
   Application.CreateForm(TFormVBAView, FormVBAView);
   Application.CreateForm(TFormVBAProperties, FormVBAProperties);
+  Application.CreateForm(TFormModuleSearch, FormModuleSearch);
+  Application.CreateForm(TFormVBACheck, FormVBACheck);
   Application.Run();
 end.

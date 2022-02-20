@@ -8,12 +8,16 @@ uses
   Vcl.ActnList, System.Actions, Vcl.StdActns, System.ImageList, Vcl.ImgList,
   Vcl.Grids, System.Classes, Vcl.Menus, SynEdit, SynEditHighlighter,
   SynHighlighterVB, SynHighlighterST, SynEditSearch, SynEditMiscClasses,
-  UnitFormVBAProperties, ParserVBA, Common, Clipbrd;
+  UnitFormVBAProperties, UnitFormModuleSearch, UnitFormVBACheck,
+  ParserVBA, Common;
 
 type
   TFormVBAView = class(TForm)
     ActionExportAll: TAction;
     ActionExportThis: TAction;
+    ActionHelp1031: TAction;
+    ActionHelp1033: TAction;
+    ActionHelp1040: TAction;
     ActionList: TActionList;
     ActionProjectProperties: TAction;
     EditFileSpec: TEdit;
@@ -34,9 +38,11 @@ type
     MenuItemFileExportAll: TMenuItem;
     MenuItemFileExportThis: TMenuItem;
     MenuItemFileOpen: TMenuItem;
+    MenuItemHelp1031: TMenuItem;
+    MenuItemHelp1033: TMenuItem;
+    MenuItemHelp1040: TMenuItem;
     MenuItemSearch: TMenuItem;
     MenuItemSearchFind: TMenuItem;
-    MenuItemSearchFindFirst: TMenuItem;
     MenuItemSearchFindNext: TMenuItem;
     MenuItemView: TMenuItem;
     MenuItemViewInformation: TMenuItem;
@@ -45,28 +51,39 @@ type
     PanelModuleVB: TPanel;
     SaveAll1: TMenuItem;
     SearchFind: TSearchFind;
-    SearchFindFirst: TSearchFindFirst;
     SearchFindNext: TSearchFindNext;
     StringGridModules: TStringGrid;
     SynEditPCode: TSynEdit;
     SynEditSearch: TSynEditSearch;
     SynEditVB: TSynEdit;
     SynVBSyn: TSynVBSyn;
+    ActionGlobalSearch: TAction;
+    MenuItemSearchGlobalSearch: TMenuItem;
+    ActionCheck: TAction;
+    MenuItemCheckAutoruns: TMenuItem;
     procedure ActionExportAllExecute(Sender: TObject);
     procedure ActionExportThisExecute(Sender: TObject);
     procedure ActionProjectPropertiesExecute(Sender: TObject);
     procedure FileOpenAccept(Sender: TObject);
     procedure FileSaveAllAccept(Sender: TObject);
     procedure FileSaveThisAccept(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure GridPanelMainLayoutResize(Sender: TObject);
-    procedure SearchFindFindDialogFind(Sender: TObject);
-    procedure SearchFindFirstFindDialogFind(Sender: TObject);
+    procedure ActionHelp1031Execute(Sender: TObject);
+    procedure ActionHelp1033Execute(Sender: TObject);
+    procedure ActionHelp1040Execute(Sender: TObject);
+    procedure ActionGlobalSearchExecute(Sender: TObject);
     procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure GridPanelMainLayoutResize(Sender: TObject);
+    procedure ActionCheckExecute(Sender: TObject);
   private
     { Private declarations }
     var VBAProgram : TVBAProgram;
+    procedure CreateWnd(); override;
+    procedure DestroyWnd(); override;
+    procedure DropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
+    procedure ReadFile(const FileName: string);
     procedure ResetGrid();
     procedure ShowErrorMessage(const E: Exception);
     procedure ShowHintMessage(const ProcessFileResult: TProcessFileResult);
@@ -83,7 +100,7 @@ implementation
 
 {$R *.dfm}
 
-uses System.Generics.Collections, System.UITypes;
+uses System.Generics.Collections, System.UITypes, Winapi.ShellAPI, Vcl.Clipbrd;
 
 const
   MessageFileNotFound = 'File not found!';
@@ -111,6 +128,11 @@ const
     'this application is an BETA version. If you want report the error to the author, ' +
     'please include the following information:'#13#10;
 
+procedure TFormVBAView.ActionCheckExecute(Sender: TObject);
+begin
+  UnitFormVBACheck.FormVBACheck.SetReference(VBAProgram);
+end;
+
 procedure TFormVBAView.ActionExportAllExecute(Sender: TObject);
 var
   I             : Int32;
@@ -135,49 +157,63 @@ begin
   Clipboard().AsText := SynEditVB.Text;
 end;
 
+procedure TFormVBAView.ActionGlobalSearchExecute(Sender: TObject);
+begin
+  UnitFormModuleSearch.FormModuleSearch.SetReference(VBAProgram);
+end;
+
+procedure TFormVBAView.ActionHelp1031Execute(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', '1031\VBUI6.CHM', nil, nil, SW_SHOW);
+end;
+
+procedure TFormVBAView.ActionHelp1033Execute(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', '1033\VBUI6.CHM', nil, nil, SW_SHOW);
+end;
+
+procedure TFormVBAView.ActionHelp1040Execute(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', '1040\VBUI6.CHM', nil, nil, SW_SHOW);
+end;
+
 procedure TFormVBAView.ActionProjectPropertiesExecute(Sender: TObject);
 begin
   UnitFormVBAProperties.FormVBAProperties.SetReference(VBAProgram);
 end;
 
+procedure TFormVBAView.CreateWnd();
+begin
+  inherited;
+  DragAcceptFiles(Handle, True);
+end;
+
+procedure TFormVBAView.DestroyWnd();
+begin
+  inherited;
+  DragAcceptFiles(Handle, False);
+end;
+
+procedure TFormVBAView.DropFiles(var Msg: TWMDropFiles);
+const
+  Index = 0;
+var
+  FileName : string;
+  Size     : UINT;
+begin
+  Size := DragQueryFile(Msg.Drop, Index, nil, 0);
+  FileName := '';
+  SetLength(FileName, Size);
+  DragQueryFile(Msg.Drop, Index, PChar(FileName), Size + 1);
+  ReadFile(FileName);
+end;
+
 procedure TFormVBAView.FileOpenAccept(Sender: TObject);
 var
   FileName    : string;
-  ParseResult : TProcessFileResult;
 begin
-  ActionExportAll.Enabled := False;
-  ActionExportThis.Enabled := False;
-  ActionProjectProperties.Enabled := False;
-  FileSaveAll.Enabled := False;
-  FileSaveThis.Enabled := False;
-  SearchFind.Enabled := False;
-  SearchFindFirst.Enabled := False;
-  SearchFindNext.Enabled := False;
   FileName := FileOpen.Dialog.FileName;
-  ResetGrid();
-  try
-    ParseResult := ParserVBA.ParseFile(FileName, VBAProgram);
-    if ParseResult = TProcessFileResult.pfOk then
-    begin
-      ActionExportAll.Enabled := True;
-      ActionExportThis.Enabled := True;
-      ActionProjectProperties.Enabled := True;
-      FileSaveAll.Enabled := True;
-      FileSaveThis.Enabled := True;
-      SearchFind.Enabled := True;
-      SearchFindFirst.Enabled := True;
-      SearchFindNext.Enabled := True;
-      EditFileSpec.Text := FileName;
-      UpdateGrid();
-    end
-    else
-      ShowHintMessage(ParseResult);
-    except
-      on E: EVBAParseError do
-        ShowWarningMessage(E);
-      on E: Exception do
-        ShowErrorMessage(E);
-  end;
+  ReadFile(FileName);
 end;
 
 procedure TFormVBAView.FileSaveAllAccept(Sender: TObject);
@@ -259,6 +295,13 @@ begin
   end;
 end;
 
+procedure TFormVBAView.FormActivate(Sender: TObject);
+begin
+  ActionHelp1031.Enabled := FileExists('1031\VBUI6.CHM');
+  ActionHelp1033.Enabled := FileExists('1033\VBUI6.CHM');
+  ActionHelp1040.Enabled := FileExists('1040\VBUI6.CHM');
+end;
+
 procedure TFormVBAView.FormCreate(Sender: TObject);
 begin
   StringGridModules.Cells[0, 0] := 'Module';
@@ -274,6 +317,46 @@ begin
   PanelModules.Height := GridPanelMainLayout.CellSize[0,1].Y - 8;
 end;
 
+procedure TFormVBAView.ReadFile(const FileName: string);
+var
+  ParseResult : TProcessFileResult;
+begin
+  ActionCheck.Enabled := False;
+  ActionExportAll.Enabled := False;
+  ActionExportThis.Enabled := False;
+  ActionGlobalSearch.Enabled := False;
+  ActionProjectProperties.Enabled := False;
+  FileSaveAll.Enabled := False;
+  FileSaveThis.Enabled := False;
+  SearchFind.Enabled := False;
+  SearchFindNext.Enabled := False;
+  ResetGrid();
+  try
+    ParseResult := ParserVBA.ParseFile(FileName, VBAProgram);
+    if ParseResult = TProcessFileResult.pfOk then
+    begin
+      ActionCheck.Enabled := True;
+      ActionExportAll.Enabled := True;
+      ActionExportThis.Enabled := True;
+      ActionGlobalSearch.Enabled := True;
+      ActionProjectProperties.Enabled := True;
+      FileSaveAll.Enabled := True;
+      FileSaveThis.Enabled := True;
+      SearchFind.Enabled := True;
+      SearchFindNext.Enabled := True;
+      EditFileSpec.Text := FileName;
+      UpdateGrid();
+    end
+    else
+      ShowHintMessage(ParseResult);
+    except
+      on E: EVBAParseError do
+        ShowWarningMessage(E);
+      on E: Exception do
+        ShowErrorMessage(E);
+  end;
+end;
+
 procedure TFormVBAView.ResetGrid();
 var
   I: UInt32;
@@ -284,30 +367,6 @@ begin
     StringGridModules.Cells[I, 1] := '';
   SynEditPCode.Text := '';
   SynEditVB.Text := '';
-end;
-
-procedure TFormVBAView.SearchFindFindDialogFind(Sender: TObject);
-var
-  SearchText : string;
-begin
-  SearchText := SearchFind.Dialog.FindText;
-  SynEditSearch.FindFirst(SearchText);
-end;
-
-procedure TFormVBAView.SearchFindFirstFindDialogFind(Sender: TObject);
-var
-  I          : Int32;
-  SearchText : string;
-begin
-  SearchText := SearchFindFirst.Dialog.FindText;
-  if VBAProgram.ModulesCount > 0 then
-    for I := 0 to VBAProgram.ModulesCount - 1 do
-      if VBAProgram.Module[I].SourceCode.ToUpper().Contains(SearchText.ToUpper()) then
-      begin
-        StringGridModules.Selection := TGridRect(Rect(0, I + 1, 2, I + 1));
-        SynEditVB.Text := VBAProgram.Module[I].SourceCode;
-        SynEditPCode.Text := VBAProgram.Module[I].ParsedPCode;
-      end;
 end;
 
 procedure TFormVBAView.ShowErrorMessage(const E: Exception);

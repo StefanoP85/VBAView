@@ -558,7 +558,7 @@ begin
       170..238:
         Result := OpCode + 12;
       else
-        Result := Result + 24;
+        Result := OpCode + 24;
     end
   else
     if VBAVersion = 5 then
@@ -578,7 +578,7 @@ begin
         168..170:
           Result := OpCode + 10;
         else
-          Result := Result + 11;
+          Result := OpCode + 11;
       end
     else
       if not VBA64bit then
