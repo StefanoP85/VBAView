@@ -20,8 +20,11 @@ type
     ActionHelp1031: TAction;
     ActionHelp1033: TAction;
     ActionHelp1040: TAction;
+    ActionHelpAbout: TAction;
     ActionList: TActionList;
     ActionProjectProperties: TAction;
+    ActionThemeSettings: TAction;
+    ActionVBASettings: TAction;
     EditFileSpec: TEdit;
     Exportthismodule1: TMenuItem;
     FileExit: TFileExit;
@@ -41,13 +44,17 @@ type
     MenuItemFileExportAll: TMenuItem;
     MenuItemFileExportThis: TMenuItem;
     MenuItemFileOpen: TMenuItem;
+    MenuItemHelp: TMenuItem;
     MenuItemHelp1031: TMenuItem;
     MenuItemHelp1033: TMenuItem;
     MenuItemHelp1040: TMenuItem;
+    MenuItemHelpAbout: TMenuItem;
     MenuItemSearch: TMenuItem;
     MenuItemSearchFind: TMenuItem;
     MenuItemSearchFindNext: TMenuItem;
     MenuItemSearchGlobalSearch: TMenuItem;
+    MenuItemThemeSettings: TMenuItem;
+    MenuItemVBASettings: TMenuItem;
     MenuItemView: TMenuItem;
     MenuItemViewInformation: TMenuItem;
     PanelModulePCode: TPanel;
@@ -61,13 +68,6 @@ type
     SynEditSearch: TSynEditSearch;
     SynEditVB: TSynEdit;
     SynVBSyn: TSynVBSyn;
-    MenuItemHelp: TMenuItem;
-    MenuItemHelpAbout: TMenuItem;
-    ActionHelpAbout: TAction;
-    ActionThemeSettings: TAction;
-    ActionVBASettings: TAction;
-    MenuItemThemeSettings: TMenuItem;
-    MenuItemVBASettings: TMenuItem;
     procedure ActionCheckExecute(Sender: TObject);
     procedure ActionExportAllExecute(Sender: TObject);
     procedure ActionExportThisExecute(Sender: TObject);
@@ -75,7 +75,10 @@ type
     procedure ActionHelp1031Execute(Sender: TObject);
     procedure ActionHelp1033Execute(Sender: TObject);
     procedure ActionHelp1040Execute(Sender: TObject);
+    procedure ActionHelpAboutExecute(Sender: TObject);
     procedure ActionProjectPropertiesExecute(Sender: TObject);
+    procedure ActionThemeSettingsExecute(Sender: TObject);
+    procedure ActionVBASettingsExecute(Sender: TObject);
     procedure FileOpenAccept(Sender: TObject);
     procedure FileSaveAllAccept(Sender: TObject);
     procedure FileSaveThisAccept(Sender: TObject);
@@ -83,9 +86,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure GridPanelMainLayoutResize(Sender: TObject);
     procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
-    procedure ActionHelpAboutExecute(Sender: TObject);
-    procedure ActionVBASettingsExecute(Sender: TObject);
-    procedure ActionThemeSettingsExecute(Sender: TObject);
   private
     { Private declarations }
     var VBAProgram : TVBAProgram;
