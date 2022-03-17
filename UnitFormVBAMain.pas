@@ -9,7 +9,7 @@ uses
   Vcl.Grids, System.Classes, Vcl.Menus, SynEdit, SynEditHighlighter,
   SynHighlighterVB, SynHighlighterST, SynEditSearch, SynEditMiscClasses,
   UnitFormVBAProperties, UnitFormModuleSearch, UnitFormVBACheck,
-  ParserVBA, Common;
+  UnitFormAbout, UnitFormThemeSettings, UnitFormVBASettings, ParserVBA, Common;
 
 type
   TFormVBAView = class(TForm)
@@ -61,6 +61,13 @@ type
     SynEditSearch: TSynEditSearch;
     SynEditVB: TSynEdit;
     SynVBSyn: TSynVBSyn;
+    MenuItemHelp: TMenuItem;
+    MenuItemHelpAbout: TMenuItem;
+    ActionHelpAbout: TAction;
+    ActionThemeSettings: TAction;
+    ActionVBASettings: TAction;
+    MenuItemThemeSettings: TMenuItem;
+    MenuItemVBASettings: TMenuItem;
     procedure ActionCheckExecute(Sender: TObject);
     procedure ActionExportAllExecute(Sender: TObject);
     procedure ActionExportThisExecute(Sender: TObject);
@@ -76,6 +83,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure GridPanelMainLayoutResize(Sender: TObject);
     procedure StringGridModulesSelectCell(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
+    procedure ActionHelpAboutExecute(Sender: TObject);
+    procedure ActionVBASettingsExecute(Sender: TObject);
+    procedure ActionThemeSettingsExecute(Sender: TObject);
   private
     { Private declarations }
     var VBAProgram : TVBAProgram;
@@ -176,9 +186,24 @@ begin
   ShellExecute(Handle, 'open', '1040\VBUI6.CHM', nil, nil, SW_SHOW);
 end;
 
+procedure TFormVBAView.ActionHelpAboutExecute(Sender: TObject);
+begin
+  UnitFormAbout.FormAbout.Show();
+end;
+
 procedure TFormVBAView.ActionProjectPropertiesExecute(Sender: TObject);
 begin
   UnitFormVBAProperties.FormVBAProperties.SetReference(VBAProgram);
+end;
+
+procedure TFormVBAView.ActionThemeSettingsExecute(Sender: TObject);
+begin
+  UnitFormThemeSettings.FormThemeSettings.Show();
+end;
+
+procedure TFormVBAView.ActionVBASettingsExecute(Sender: TObject);
+begin
+  UnitFormVBASettings.FormVBASettings.Show();
 end;
 
 procedure TFormVBAView.CreateWnd();
