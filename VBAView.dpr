@@ -1,5 +1,7 @@
 program VBAView;
 
+{$R *.dres}
+
 uses
   Vcl.Forms,
   UnitFormVBAMain in 'UnitFormVBAMain.pas' {FormVBAView},

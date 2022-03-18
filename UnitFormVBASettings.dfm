@@ -12,6 +12,9 @@ object FormVBASettings: TFormVBASettings
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object LabelSynEdit: TLabel
@@ -42,6 +45,7 @@ object FormVBASettings: TFormVBASettings
     Height = 25
     Caption = 'Apply'
     TabOrder = 0
+    OnClick = ButtonApplyClick
   end
   object ComboBoxFont: TComboBox
     Left = 375
@@ -50,6 +54,7 @@ object FormVBASettings: TFormVBASettings
     Height = 21
     Style = csDropDownList
     TabOrder = 1
+    OnChange = ComboBoxFontChange
   end
   object ComboBoxTheme: TComboBox
     Left = 11
@@ -58,6 +63,7 @@ object FormVBASettings: TFormVBASettings
     Height = 21
     Style = csDropDownList
     TabOrder = 2
+    OnChange = ComboBoxThemeChange
   end
   object EditFontSize: TEdit
     Left = 491

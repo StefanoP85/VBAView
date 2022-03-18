@@ -203,6 +203,7 @@ end;
 
 procedure TFormVBAView.ActionVBASettingsExecute(Sender: TObject);
 begin
+  UnitFormVBASettings.FormVBASettings.SetReferences(SynEditVB, SynVBSyn);
   UnitFormVBASettings.FormVBASettings.Show();
 end;
 
