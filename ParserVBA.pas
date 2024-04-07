@@ -1,5 +1,4 @@
 unit ParserVBA;
-{$ALIGN 1}
 
 interface
 

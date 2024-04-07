@@ -1,5 +1,4 @@
 unit FilesCFB;
-{$ALIGN 1}
 
 interface
 
@@ -16,7 +15,7 @@ const
 
 type
   { Structure for CFB Header, according to [MS-CFB] section 2.2 }
-  TCFBHeader  = record
+  TCFBHeader  = packed record
     { Header Signature (8 bytes): Identification signature for the compound file structure, and MUST be
       set to the value 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1. }
     Signature : UInt64;
@@ -83,7 +82,7 @@ type
   TDirectoryEntryName = array[0..31] of Char;
 
   { Structure for Compound File Directory Entry, according to [MS-CFB] section 2.6 }
-  TDirectoryEntry = record
+  TDirectoryEntry = packed record
     { Directory Entry Name (64 bytes): This field MUST contain a Unicode string for the storage or
       stream name encoded in UTF-16. The name MUST be terminated with a UTF-16 terminating null
       character. Thus, storage and stream names are limited to 32 UTF-16 code points, including the
@@ -163,7 +162,7 @@ type
   end;
 
   { This object holds the content of a stream }
-  TCFBStream = record
+  TCFBStream = packed record
     Content  : TArray<Byte>;
     ContentName: string;
     FullName: string;

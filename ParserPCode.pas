@@ -1,5 +1,4 @@
 unit ParserPCode;
-{$ALIGN 1}
 
 interface
 
@@ -53,7 +52,7 @@ const
 
 type
   TEndian       = (BigEndian, LittleEndian);
-  TVariantType  = record
+  TVariantType  = packed record
     VarType     : UInt16;
     TypeName    : string;
     Description : string;
@@ -104,7 +103,7 @@ const
   );
 
 type
-  TInstruction  = record
+  TInstruction  = packed record
     Id          : UInt16;
     Mnemonic    : string;
     Arguments   : string;
